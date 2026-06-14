@@ -39,6 +39,10 @@ type UploadedFile struct {
 	FileSize          int64
 }
 
+// UploadOneFile uploads a single file from an http request. The first parameter is the http request,
+// the second is the directory to which the file should be uploaded, and the third is an optional boolean
+// indicating whether the file should be renamed. If the file should be renamed it uses the RandomString method to generate a new
+// file name, with the original file extension.
 func (t *Tools) UploadOneFile(r *http.Request, uploadDir string, rename ...bool) (*UploadedFile, error) {
 	renameFile := true
 	if len(rename) > 0 {
@@ -51,6 +55,11 @@ func (t *Tools) UploadOneFile(r *http.Request, uploadDir string, rename ...bool)
 	return files[0], nil
 }
 
+// UploadFiles uploads one or more files from an http request. The first parameter is the http request,
+// the second is the directory to which the file should be uploaded, and the third is an optional boolean
+// indicating whether the file should be renamed. If the file should be renamed it uses the RandomString method to generate a new
+// file name, with the original file extension. The method returns a slice of UploadedFile structs, one for each file uploaded,
+// and an error if there was a problem with the upload.
 func (t *Tools) UploadFiles(r *http.Request, uploadDir string, rename ...bool) ([]*UploadedFile, error) {
 	renameFile := true
 	if len(rename) > 0 {
@@ -130,4 +139,16 @@ func (t *Tools) UploadFiles(r *http.Request, uploadDir string, rename ...bool) (
 
 	}
 	return uploadedFiles, nil
+}
+
+// CreateDirIFNotExists creates a directory and all necessary parents if it does not already exist. If the directory already exists, no error is returned.
+func (t *Tools) CreateDirIfNotExist(path string) error {
+	const mode = 0755
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		err = os.MkdirAll(path, mode)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
