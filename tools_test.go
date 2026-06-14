@@ -6,6 +6,7 @@ import (
 	"image/png"
 	"io"
 	"mime/multipart"
+	"net/http"
 	"net/http/httptest"
 	"os"
 	"sync"
@@ -181,5 +182,29 @@ func TestTools_Slugify(t *testing.T) {
 				t.Errorf("%s: expected slug: %s, got: %s", tt.name, tt.expected, slug)
 			}
 		})
+	}
+}
+
+func TestTools_DownloadStaticFile(t *testing.T) {
+	rr := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/", nil)
+
+	var testTools Tools
+
+	testTools.DownloadStaticFile(rr, req, "./testdata", "pic.jpg", "puppy.jpg")
+
+	res := rr.Result()
+	defer res.Body.Close()
+
+	if res.Header["Content-Length"][0] != "98827" {
+		t.Error("expected content length of 98827, got", res.Header["Content-Length"][0])
+	}
+	if res.Header["Content-Disposition"][0] != "attachment; filename=\"puppy.jpg\"" {
+		t.Error("wrong content disposition")
+	}
+
+	_, err := io.ReadAll(res.Body)
+	if err != nil {
+		t.Error("error reading response body:", err)
 	}
 }
